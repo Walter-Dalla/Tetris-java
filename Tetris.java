@@ -3,18 +3,19 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
+
 class Shape {
     protected Point[] shape;
 	protected Color color;
 	private Random rand = new Random();
+	private int widthLeft, widthRight;
+	private int heightTop, heightBottom;
 
 	public Shape(){
 		generateRandomColor();
@@ -29,6 +30,30 @@ class Shape {
 	}
 	
     protected void setShape(Point[] shape){
+		int maxWidth = 0, minWidth = 0;
+		int maxHeight = 0, minHeight = 0;
+
+		for (Point point : shape) {
+			if(maxWidth < point.x){
+				maxWidth = point.x;
+			}
+			else if(minWidth > point.x){
+				minWidth = point.x;
+			}
+			else if(maxHeight < point.y){
+				maxHeight = point.y;
+			}
+			else if(minHeight > point.y){
+				minHeight = point.y;
+			}
+		}
+
+		widthLeft = minWidth;
+		widthRight = maxWidth;
+		
+		heightLeft = minHeight;
+		heightRight = minHeight;
+
         this.shape = shape;
     }
 
@@ -81,6 +106,31 @@ class Shape {
 		point.x = point.y;
 		point.y = aux;
 	}
+
+	public int getWidthLeft(){
+		return widthLeft;
+	}
+
+	public int getWidthRight(){
+		return widthRight;
+	}
+
+	public int getHeight(){
+		return heightLeft + heightRight;
+	}
+
+	void posRotate(){
+
+		int auxWidth = widthLeft;
+		int auxRight = widthRight;
+		widthLeft = 
+		widthRight = 
+
+		heightLeft = widthLeft;
+		widthLeft = heightLeft;
+		heightRight  = 
+		
+	}
 }
 
 class StripShape extends Shape {
@@ -88,7 +138,7 @@ class StripShape extends Shape {
     StripShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1) 
+			new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)
 		};
 		setShape(shape);
     }
@@ -118,7 +168,9 @@ class StripShape extends Shape {
 				}
 			}
 		}
+		posRotate();
 	}
+
 }
 
 
@@ -193,19 +245,23 @@ class ZShape extends Shape {
 
 class GameMap {
 	private Color[][] map;
+	private int width;
+	private int height;
 
 	public GameMap(int width, int height) {
 		map = new Color[width][height];
-		
-		PrintBorders();
+		this.width = width;
+		this.height = height;
+
 		SetBackgroundColor();
+		PrintBorders();
 	}
 
 	private void SetBackgroundColor(){
-		for (int columnIndex = 1; columnIndex < map.length -1; columnIndex++) {
+		for (int columnIndex = 0; columnIndex < map.length -1; columnIndex++) {
 			Color[] gameMapLine = map[columnIndex];
 
-			for (int lineIndex = 1; lineIndex < gameMapLine.length -1; lineIndex++) {
+			for (int lineIndex = 0; lineIndex < gameMapLine.length -1; lineIndex++) {
 				gameMapLine[lineIndex] = Color.BLACK;
 			}
 		}
@@ -226,6 +282,26 @@ class GameMap {
 	public Color[][] getMap(){
 		return map;
 	}
+
+	public Color getMapBlock(int colIndex, int lineIndex){
+		return map[colIndex][lineIndex];
+	}
+
+	public void setMapBlock(int colIndex, int lineIndex, Color color){
+		map[colIndex][lineIndex] = color;
+	}
+
+	public void clearMapBlock(int colIndex, int lineIndex){
+		map[colIndex][lineIndex] = Color.black;
+	}
+
+	public int getHeight(){
+		return height;
+	}
+
+	public int getWidth(){
+		return width - 1;
+	}
 }
 
 
@@ -233,11 +309,15 @@ public class Tetris extends JPanel {
 
 	private static final long serialVersionUID = -8715353373678321308L;
 	
-	private Shape fallingShape;
 	private GameMap gameMap = new GameMap(12, 24);
 	private Random rand = new Random();
+	private Shape fallingShape;
 	private Point centerPoint = new Point(5, 2);
-	private int score = 0 ;
+	private int score = 0;
+
+	Tetris(){
+		newFallingShape();
+	}
 
 	public void newFallingShape(){
 		
@@ -283,12 +363,51 @@ public class Tetris extends JPanel {
 		
 	}
 
-	public void move(int side){
+	public void fallBlock(){
+		clearLastShapeRender();
+		
+		if(centerPoint.y < gameMap.getMap()[0].length){
+			centerPoint.y += 1;
+		}
+	}
 
+	public void move(int command){
+		clearLastShapeRender();
+		int newXPlace = centerPoint.x + command;
+
+		if(canMoveXAxle(newXPlace)) {
+			centerPoint.x += command;
+		}
+	}
+
+	private Boolean canMoveXAxle(int newXPlace){
+		Boolean outOfBoxRight = gameMap.getWidth() > newXPlace + fallingShape.getWidthRight();
+		Boolean outOfBoxLeft = 0 < newXPlace - fallingShape.getWidthLeft();
+		
+		return outOfBoxRight && outOfBoxLeft;
+	}
+
+	private void clearLastShapeRender(){
+		for (Point point : fallingShape.getShape()) {
+			int newX = point.x + centerPoint.x;
+			int newY = point.y + centerPoint.y;
+	
+			gameMap.setMapBlock(newX, newY, Color.black);
+		}
+	}
+
+	public void renderShapes(){
+
+		for (Point point : fallingShape.getShape()) {
+			int newX = point.x + centerPoint.x;
+			int newY = point.y + centerPoint.y;
+			
+			gameMap.setMapBlock(newX, newY, fallingShape.color);
+		}
 	}
 
 	public void rotate(Boolean isLeftRotation) {
-
+		fallingShape.rotate(isLeftRotation);
 	}
 
 	// switch (numClears) {
@@ -306,20 +425,12 @@ public class Tetris extends JPanel {
 	// 	break;
 	// }
 	
-	
-	// Draw the falling piece
-	/*private void drawPiece(Graphics g) {		
-		g.setColor(tetraminoColors[currentPiece]);
-		for (Point p : Tetraminos[currentPiece].getShape()) {
-			g.fillRect((p.x + pieceOrigin.x) * 26, 
-					   (p.y + pieceOrigin.y) * 26, 
-					   25, 25);
-		}
-	}*/
-	
 	@Override 
 	public void paintComponent(Graphics g)
 	{
+		clearLastShapeRender();
+		renderShapes();
+		
 		System.out.println("Paint");
 		
 		g.fillRect(0, 0, 26*12, 26*23);
@@ -329,7 +440,6 @@ public class Tetris extends JPanel {
 				g.fillRect(26*i, 26*j, 25, 25);
 			}
 		}
-		
 		// Display the score
 		// g.setColor(Color.WHITE);
 		// g.drawString("" + score, 19*12, 25);
@@ -341,36 +451,38 @@ public class Tetris extends JPanel {
 	public static void main(String[] args) {
 		JFrame f = new JFrame("Tetris");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setSize(12*26+20, 26*23+100);
+		f.setSize(12*26+20, 26*24+100);
 		final Tetris game = new Tetris();
-		//game.init();
 		
 		f.add(game);
 		f.setVisible(true);
-		// Keyboard controls
+		
 		f.addKeyListener(new KeyListener() {
 			public void keyTyped(KeyEvent e) {
 			}
 			
 			public void keyPressed(KeyEvent e) {
+				
 				switch (e.getKeyCode()) {
-				case KeyEvent.VK_UP:
-					game.rotate(true);
-					break;
-				case KeyEvent.VK_DOWN:
-					game.rotate(false);
-					break;
-				case KeyEvent.VK_LEFT:
-					game.move(-1);
-					break;
-				case KeyEvent.VK_RIGHT:
-					game.move(+1);
-					break;
-				case KeyEvent.VK_SPACE:
-					//game.dropDown();
-					game.score += 1;
-					break;
+					case KeyEvent.VK_UP:
+						game.rotate(true);
+						break;
+					case KeyEvent.VK_DOWN:
+						game.fallBlock();
+						break;
+					case KeyEvent.VK_LEFT:
+						game.move(-1);
+						break;
+					case KeyEvent.VK_RIGHT:
+						game.move(+1);
+						break;
+					case KeyEvent.VK_SPACE:
+						//game.dropDown();
+						game.score += 1;
+						break;
 				} 
+
+				game.repaint();
 			}
 			
 			public void keyReleased(KeyEvent e) {
@@ -384,11 +496,10 @@ public class Tetris extends JPanel {
 					
 					try {
 						Thread.sleep(1000);
-						//game.dropDown();
+						game.repaint();
+						game.fallBlock();
 					} catch ( InterruptedException e ) {
 						System.out.println(e.getMessage());
-
-
 					}
 				}
 			}

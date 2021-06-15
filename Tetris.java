@@ -51,8 +51,8 @@ class Shape {
 		widthLeft = minWidth;
 		widthRight = maxWidth;
 		
-		heightLeft = minHeight;
-		heightRight = minHeight;
+		heightTop = minHeight;
+		heightBottom = minHeight;
 
         this.shape = shape;
     }
@@ -116,7 +116,7 @@ class Shape {
 	}
 
 	public int getHeight(){
-		return heightLeft + heightRight;
+		return heightTop + heightBottom;
 	}
 
 	void posRotate(){
@@ -126,9 +126,9 @@ class Shape {
 		widthLeft = 
 		widthRight = 
 
-		heightLeft = widthLeft;
-		widthLeft = heightLeft;
-		heightRight  = 
+		heightTop = widthLeft;
+		widthLeft = heightTop;
+		heightBottom  = 0; 
 		
 	}
 }

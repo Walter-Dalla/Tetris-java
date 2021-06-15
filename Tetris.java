@@ -197,30 +197,30 @@ class GameMap {
 	public GameMap(int width, int height) {
 		map = new Color[width][height];
 		
-		PrintBorders();
 		SetBackgroundColor();
+		PrintBorders();
 	}
 
 	private void SetBackgroundColor(){
-		for (int columnIndex = 1; columnIndex < map.length -1; columnIndex++) {
+		for (int columnIndex = 0; columnIndex < map.length -0; columnIndex++) {
 			Color[] gameMapLine = map[columnIndex];
 
-			for (int lineIndex = 1; lineIndex < gameMapLine.length -1; lineIndex++) {
+			for (int lineIndex = 0; lineIndex < gameMapLine.length -0; lineIndex++) {
 				gameMapLine[lineIndex] = Color.BLACK;
 			}
 		}
 	}
 
+	//Davi (Resolver as bordas)
 	private void PrintBorders(){
-		// for (int lineIndex = 0; lineIndex < map.length -1; lineIndex++) {
-		// 	map[0][lineIndex] = Color.RED;
-		// 	map[map.length -1][lineIndex] = Color.RED;
-		// }
+		for (int colIndex = 0; colIndex < map[0].length -1; colIndex++) {
+			map[0][colIndex] = Color.GRAY;
+			map[map.length -1][colIndex] = Color.GRAY;
+		}
 
-		// for (int colIndex = 0; colIndex < map.length; colIndex++) {
-		// 	map[colIndex][0] = Color.pink;
-		// 	map[colIndex][map.length - 1] = Color.pink;
-		// }
+		for (int lineIndex = 0; lineIndex < map.length; lineIndex++) {
+			map[lineIndex][map[0].length -1] = Color.GRAY;
+		}
 	}
 
 	public Color[][] getMap(){
@@ -236,7 +236,7 @@ public class Tetris extends JPanel {
 	private Shape fallingShape;
 	private GameMap gameMap = new GameMap(12, 24);
 	private Random rand = new Random();
-	private Point centerPoint = new Point(5, 2);
+	private Point centerPoint = new Point(5, 2); //Centro dos blocos
 	private int score = 0 ;
 
 	public void newFallingShape(){
@@ -322,9 +322,9 @@ public class Tetris extends JPanel {
 	{
 		System.out.println("Paint");
 		
-		g.fillRect(0, 0, 26*12, 26*23);
+		g.fillRect(0, 0, 26*12, 26*24);
 		for (int i = 0; i < 12; i++) {
-			for (int j = 0; j < 23; j++) {
+			for (int j = 0; j < 24; j++) {
 				g.setColor(gameMap.getMap()[i][j]);
 				g.fillRect(26*i, 26*j, 25, 25);
 			}

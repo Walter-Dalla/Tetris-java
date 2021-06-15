@@ -31,19 +31,22 @@ class Shape {
 	
     protected void setShape(Point[] shape){
 		int maxWidth = 0, minWidth = 0;
-		int maxHeight = 0, minHeight = 0;
+		int maxHeight = 0, minHeight = 10;
 
 		for (Point point : shape) {
-			if(maxWidth < point.x){
+			if(maxWidth < point.x) {
 				maxWidth = point.x;
 			}
-			else if(minWidth > point.x){
+			
+			if(minWidth > point.x) {
 				minWidth = point.x;
 			}
-			else if(maxHeight < point.y){
+			
+			if(maxHeight < point.y) {
 				maxHeight = point.y;
 			}
-			else if(minHeight > point.y){
+
+			if(minHeight > point.y) {
 				minHeight = point.y;
 			}
 		}
@@ -51,7 +54,7 @@ class Shape {
 		widthLeft = minWidth;
 		widthRight = maxWidth;
 		
-		heightTop = minHeight;
+		heightTop = maxHeight;
 		heightBottom = minHeight;
 
         this.shape = shape;
@@ -72,26 +75,29 @@ class Shape {
 
 	protected void rotate(Boolean isLeftRotation) {
 		for (Point point : shape) {
-			if(point.x != 0 && point.y != 0){
+			System.out.println("(" + point.x + ", " + point.y + ")");
+			if(point.x != 0 || point.y != 0) {
 				rotateCorners(point);
 			}
 			else {
 				rotateCross(point, isLeftRotation);
 			}
 		}
+
+		posRotate(isLeftRotation);
 	}
 
 	private void rotateCorners(Point point){
-		if(point.x + point.y == 0){
+		if(point.x + point.y == 0) {
 			point.x *= -1;
 		}
-		else{
+		else {
 			point.y *= -1;
 		}
 	}
 
 	private void rotateCross(Point point, Boolean isLeftRotation){
-		if(point.x == 0){
+		if(point.x == 0) {
 			point.y = 0;
 			point.x = isLeftRotation? -1: 1;
 		}
@@ -119,17 +125,25 @@ class Shape {
 		return heightTop + heightBottom;
 	}
 
-	void posRotate(){
+	public int getHeightBottom(){
+		return Math.abs(heightBottom);
+	}
 
-		int auxWidth = widthLeft;
-		int auxRight = widthRight;
-		widthLeft = 
-		widthRight = 
-
-		heightTop = widthLeft;
-		widthLeft = heightTop;
-		heightBottom  = 0; 
+	void posRotate(Boolean isLeftRotation){
+		int aux = heightBottom;
 		
+		if(isLeftRotation){
+			heightBottom = widthRight;
+			widthRight = heightTop;
+			heightTop = widthLeft;
+			widthLeft = aux;
+		}
+		else {
+			heightBottom = widthLeft;
+			widthLeft = heightTop;
+			heightTop = widthRight;
+			widthRight = aux;
+		}
 	}
 }
 
@@ -168,7 +182,8 @@ class StripShape extends Shape {
 				}
 			}
 		}
-		posRotate();
+
+		posRotate(isLeftRotation);
 	}
 
 }
@@ -179,8 +194,9 @@ class JShape extends Shape {
     JShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0)
+			new Point(-1, 0), new Point(0, 0), new Point(1, 0), new Point(1, -1)
 		};
+		
 		setShape(shape);
     }
 }
@@ -269,7 +285,6 @@ class GameMap {
 		}
 	}
 
-	//Davi (Resolver as bordas)
 	private void PrintBorders(){
 		for (int colIndex = 0; colIndex < map[0].length -1; colIndex++) {
 			map[0][colIndex] = Color.GRAY;
@@ -316,7 +331,7 @@ public class Tetris extends JPanel {
 
 	private Shape fallingShape;
 	private Point centerPoint = new Point(5, 2);
-	private int score = 0;
+	private int score = 100;
 
 	Tetris(){
 		newFallingShape();
@@ -326,6 +341,7 @@ public class Tetris extends JPanel {
 		
 		int randomNumber = rand.nextInt();
 		Shape newShape;
+		centerPoint = new Point(5, 2);
 
 		switch (randomNumber) {
 			case 0:
@@ -359,23 +375,62 @@ public class Tetris extends JPanel {
 				newShape = new LShape();
 		}
 
-		fallingShape = newShape;
+		
+		fallingShape = new JShape();//newShape;
+		if(willCollide(0, 1)) {
+			System.out.printf("Finish him");
+		}
 	}
 
 	public void fixToMap() {
 		
+		for (Point point : fallingShape.getShape()) {
+			gameMap.setMapBlock(point.x + centerPoint.x, point.y + centerPoint.y, fallingShape.color);
+		}
+
+		newFallingShape();
 	}
 
 	public void fallBlock(){
-		clearLastShapeRender();
+
+		int notTouchOnBorder = 1;
+		int centerPointOffSet = 1;
+		int fallMovementValue = 1;
+
+		int shapeOffSet = centerPointOffSet + fallingShape.getHeightBottom();
+		Boolean canFall = centerPoint.y + shapeOffSet + notTouchOnBorder + fallMovementValue < gameMap.getHeight();
 		
-		if(centerPoint.y < gameMap.getMap()[0].length){
-			centerPoint.y += 1;
+		
+		if(canFall && !willCollide(0, 1)) {
+			centerPoint.y += fallMovementValue;
 		}
+		else {
+			fixToMap();
+		}
+	}
+
+	private Boolean willCollide(int xModifier, int yModifier){
+		clearLastShapeRender();
+
+		for (Point point : fallingShape.getShape()) {
+			int x = point.x + centerPoint.x + xModifier;
+			int y = point.y + centerPoint.y + yModifier;
+
+			Color gameColor = gameMap.getMapBlock(x, y);
+
+			Boolean collide = gameColor != Color.BLACK;
+
+			if(collide) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public void move(int command){
 		clearLastShapeRender();
+
 		int newXPlace = centerPoint.x + command;
 
 		if(canMoveXAxle(newXPlace)) {
@@ -410,6 +465,8 @@ public class Tetris extends JPanel {
 	}
 
 	public void rotate(Boolean isLeftRotation) {
+		clearLastShapeRender();
+
 		fallingShape.rotate(isLeftRotation);
 	}
 
@@ -434,7 +491,7 @@ public class Tetris extends JPanel {
 		clearLastShapeRender();
 		renderShapes();
 		
-		System.out.println("Paint");
+		//System.out.println("Paint");
 		
 		g.fillRect(0, 0, 26*12, 26*24);
 		for (int i = 0; i < 12; i++) {
@@ -443,12 +500,11 @@ public class Tetris extends JPanel {
 				g.fillRect(26*i, 26*j, 25, 25);
 			}
 		}
-		// Display the score
-		// g.setColor(Color.WHITE);
-		// g.drawString("" + score, 19*12, 25);
 		
-		// Draw the currently falling piece
-		// drawPiece(g);
+		// Display the score
+		g.setColor(Color.WHITE);
+		g.drawString("" + score, 19*12, 25);
+		
 	}
 
 	public static void main(String[] args) {

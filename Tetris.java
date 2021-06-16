@@ -75,12 +75,16 @@ class Shape {
 
 	protected void rotate(Boolean isLeftRotation) {
 		for (Point point : shape) {
-			System.out.println("(" + point.x + ", " + point.y + ")");
-			if(point.x != 0 || point.y != 0) {
-				rotateCorners(point);
+			if(point.x == 0 && point.y == 0){
+				continue;
+			}
+
+			
+			if(point.x == 0 || point.y == 0) {
+				rotateCross(point, isLeftRotation);
 			}
 			else {
-				rotateCross(point, isLeftRotation);
+				rotateCorners(point);
 			}
 		}
 
@@ -97,6 +101,9 @@ class Shape {
 	}
 
 	private void rotateCross(Point point, Boolean isLeftRotation){
+		
+		
+
 		if(point.x == 0) {
 			point.y = 0;
 			point.x = isLeftRotation? -1: 1;
@@ -105,6 +112,7 @@ class Shape {
 			point.x = 0;
 			point.y = isLeftRotation? -1: 1;
 		}
+		System.out.println("(" + point.x + ", " + point.y + ")");
 	}
 
 	protected void invertPoint(Point point) {
@@ -459,8 +467,15 @@ public class Tetris extends JPanel {
 		for (Point point : fallingShape.getShape()) {
 			int newX = point.x + centerPoint.x;
 			int newY = point.y + centerPoint.y;
-			
-			gameMap.setMapBlock(newX, newY, fallingShape.color);
+
+			if(point.x == point.y && point.x == 0){
+				gameMap.setMapBlock(newX, newY, Color.red);
+			}else
+			if(point.y == 0 || point.x == 0){
+				gameMap.setMapBlock(newX, newY, Color.yellow);
+			}else{
+				gameMap.setMapBlock(newX, newY, fallingShape.color);
+			}
 		}
 	}
 

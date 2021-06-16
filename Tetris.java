@@ -3,6 +3,8 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -30,7 +32,7 @@ class Shape {
 	}
 	
     protected void setShape(Point[] shape){
-		int maxWidth = 0, minWidth = 0;
+		int maxWidth = 0, minWidth = 10;
 		int maxHeight = 0, minHeight = 10;
 
 		for (Point point : shape) {
@@ -74,45 +76,33 @@ class Shape {
 
 
 	protected void rotate(Boolean isLeftRotation) {
-		for (Point point : shape) {
-			if(point.x == 0 && point.y == 0){
-				continue;
-			}
-
-			
-			if(point.x == 0 || point.y == 0) {
-				rotateCross(point, isLeftRotation);
-			}
-			else {
-				rotateCorners(point);
-			}
-		}
+		shape = preRotate(shape, isLeftRotation);
 
 		posRotate(isLeftRotation);
 	}
 
-	private void rotateCorners(Point point){
-		if(point.x + point.y == 0) {
-			point.x *= -1;
-		}
-		else {
-			point.y *= -1;
-		}
-	}
-
-	private void rotateCross(Point point, Boolean isLeftRotation){
+	public Point[] preRotate(Point[] mockedShape, Boolean isLeftRotation) {
 		
-		
+		List<Point> newPointsList = new ArrayList<Point>();
+		Point newPoint;
 
-		if(point.x == 0) {
-			point.y = 0;
-			point.x = isLeftRotation? -1: 1;
+		for (Point point : mockedShape) {
+
+			if(isLeftRotation) {
+				newPoint = new Point(point.y, -point.x);
+			}
+			else {
+				newPoint = new Point(-point.y, point.x);
+			}
+
+			newPointsList.add(newPoint);
 		}
-		else {
-			point.x = 0;
-			point.y = isLeftRotation? -1: 1;
-		}
-		System.out.println("(" + point.x + ", " + point.y + ")");
+		Point[] newPoints = new Point[newPointsList.size()];
+
+		for (int index = 0; index < newPointsList.size(); index++)
+			newPoints[index] = newPointsList.get(index);
+
+		return newPoints;
 	}
 
 	protected void invertPoint(Point point) {
@@ -122,15 +112,15 @@ class Shape {
 	}
 
 	public int getWidthLeft(){
-		return widthLeft;
+		return Math.abs(widthLeft);
 	}
 
 	public int getWidthRight(){
-		return widthRight;
+		return Math.abs(widthRight);
 	}
 
 	public int getHeight(){
-		return heightTop + heightBottom;
+		return Math.abs(heightTop) + Math.abs(heightBottom);
 	}
 
 	public int getHeightBottom(){
@@ -141,16 +131,16 @@ class Shape {
 		int aux = heightBottom;
 		
 		if(isLeftRotation){
-			heightBottom = widthRight;
-			widthRight = heightTop;
-			heightTop = widthLeft;
-			widthLeft = aux;
-		}
-		else {
 			heightBottom = widthLeft;
 			widthLeft = heightTop;
 			heightTop = widthRight;
 			widthRight = aux;
+		}
+		else {
+			heightBottom = widthRight;
+			widthRight = heightTop;
+			heightTop = widthLeft;
+			widthLeft = aux;
 		}
 	}
 }
@@ -166,33 +156,33 @@ class StripShape extends Shape {
     }
 
 
-	@Override
-	protected void rotate(Boolean isLeftRotation) {
-		int xSum = 0;
+	// @Override
+	// protected void rotate(Boolean isLeftRotation) {
+	// 	int xSum = 0;
 		
-		for (Point point : shape) {
-			xSum += point.x;
-		}
+	// 	for (Point point : shape) {
+	// 		xSum += point.x;
+	// 	}
 
-		Boolean isXStrip = xSum == 0 || xSum == 4;
+	// 	Boolean isXStrip = xSum == 0 || xSum == 4;
 
-		for (Point point : shape) {
-			invertPoint(point);
+	// 	for (Point point : shape) {
+	// 		invertPoint(point);
 
-			if(isXStrip){
-				if(!isLeftRotation){
-					point.y = 0;
-				}
-			}
-			else {
-				if(isLeftRotation){
-					point.x = 1;
-				}
-			}
-		}
+	// 		if(isXStrip){
+	// 			if(!isLeftRotation){
+	// 				point.y = 0;
+	// 			}
+	// 		}
+	// 		else {
+	// 			if(isLeftRotation){
+	// 				point.x = 1;
+	// 			}
+	// 		}
+	// 	}
 
-		posRotate(isLeftRotation);
-	}
+	// 	posRotate(isLeftRotation);
+	// }
 
 }
 
@@ -218,8 +208,6 @@ class LShape extends Shape {
 		};
 		setShape(shape);
     }
-
-	
 }
 
 class OShape extends Shape {
@@ -385,42 +373,44 @@ public class Tetris extends JPanel {
 
 		
 		fallingShape = new JShape();//newShape;
+
 		if(willCollide(0, 1)) {
 			System.out.printf("Finish him");
 		}
 	}
 
-	public void fixToMap() {
-		
-		for (Point point : fallingShape.getShape()) {
-			gameMap.setMapBlock(point.x + centerPoint.x, point.y + centerPoint.y, fallingShape.color);
-		}
-
-		newFallingShape();
-	}
-
 	public void fallBlock(){
 
-		int notTouchOnBorder = 1;
-		int centerPointOffSet = 1;
 		int fallMovementValue = 1;
 
-		int shapeOffSet = centerPointOffSet + fallingShape.getHeightBottom();
-		Boolean canFall = centerPoint.y + shapeOffSet + notTouchOnBorder + fallMovementValue < gameMap.getHeight();
-		
-		
-		if(canFall && !willCollide(0, 1)) {
-			centerPoint.y += fallMovementValue;
+		if(willCollide(0, fallMovementValue)) {
+			fixToMap();
 		}
 		else {
-			fixToMap();
+			centerPoint.y += fallMovementValue;
 		}
 	}
 
-	private Boolean willCollide(int xModifier, int yModifier){
+	
+	public void move(int command){
+		
+		if(!willCollide(command, 0)) {
+			centerPoint.x += command;
+		}
+	}
+	
+	private Boolean willCollide(Point[] shape) {
+		return willCollide(shape, 0, 0);
+	}
+
+	private Boolean willCollide(int xModifier, int yModifier) {
+		return willCollide(fallingShape.getShape(), xModifier, yModifier);
+	}
+
+	private Boolean willCollide(Point[] shape, int xModifier, int yModifier){
 		clearLastShapeRender();
 
-		for (Point point : fallingShape.getShape()) {
+		for (Point point : shape) {
 			int x = point.x + centerPoint.x + xModifier;
 			int y = point.y + centerPoint.y + yModifier;
 
@@ -436,23 +426,15 @@ public class Tetris extends JPanel {
 		return false;
 	}
 
-	public void move(int command){
-		clearLastShapeRender();
-
-		int newXPlace = centerPoint.x + command;
-
-		if(canMoveXAxle(newXPlace)) {
-			centerPoint.x += command;
-		}
-	}
-
-	private Boolean canMoveXAxle(int newXPlace){
-		Boolean outOfBoxRight = gameMap.getWidth() > newXPlace + fallingShape.getWidthRight();
-		Boolean outOfBoxLeft = 0 < newXPlace - fallingShape.getWidthLeft();
+	private void fixToMap() {
 		
-		return outOfBoxRight && outOfBoxLeft;
-	}
+		for (Point point : fallingShape.getShape()) {
+			gameMap.setMapBlock(point.x + centerPoint.x, point.y + centerPoint.y, fallingShape.color);
+		}
 
+		newFallingShape();
+	}
+	
 	private void clearLastShapeRender(){
 		for (Point point : fallingShape.getShape()) {
 			int newX = point.x + centerPoint.x;
@@ -468,21 +450,19 @@ public class Tetris extends JPanel {
 			int newX = point.x + centerPoint.x;
 			int newY = point.y + centerPoint.y;
 
-			if(point.x == point.y && point.x == 0){
-				gameMap.setMapBlock(newX, newY, Color.red);
-			}else
-			if(point.y == 0 || point.x == 0){
-				gameMap.setMapBlock(newX, newY, Color.yellow);
-			}else{
-				gameMap.setMapBlock(newX, newY, fallingShape.color);
-			}
+			gameMap.setMapBlock(newX, newY, fallingShape.color);
+			
 		}
 	}
 
 	public void rotate(Boolean isLeftRotation) {
 		clearLastShapeRender();
-
-		fallingShape.rotate(isLeftRotation);
+		Point[] points = fallingShape.getShape();
+		points = fallingShape.preRotate(points, isLeftRotation);
+		
+		if(!willCollide(points)) {
+			fallingShape.rotate(isLeftRotation);
+		}
 	}
 
 	// switch (numClears) {
@@ -542,6 +522,7 @@ public class Tetris extends JPanel {
 						game.rotate(true);
 						break;
 					case KeyEvent.VK_DOWN:
+						//game.rotate(true);
 						game.fallBlock();
 						break;
 					case KeyEvent.VK_LEFT:

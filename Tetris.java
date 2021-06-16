@@ -432,6 +432,7 @@ public class Tetris extends JPanel {
 			gameMap.setMapBlock(point.x + centerPoint.x, point.y + centerPoint.y, fallingShape.color);
 		}
 
+		isFull();
 		newFallingShape();
 	}
 	
@@ -465,28 +466,66 @@ public class Tetris extends JPanel {
 		}
 	}
 
-	// switch (numClears) {
-	// case 1:
-	// 	score += 100;
-	// 	break;
-	// case 2:
-	// 	score += 300;
-	// 	break;
-	// case 3:
-	// 	score += 500;
-	// 	break;
-	// case 4:
-	// 	score += 800;
-	// 	break;
-	// }
+	public void isFull(){
+		int rowStrick = 0;
+		int mapOffset = 1;
+
+		for(int rowIndex = mapOffset; rowIndex < gameMap.getHeight() -mapOffset; rowIndex++) {
+			Boolean isRowFull = true;
+			for(int colIndex = 0; colIndex < gameMap.getWidth(); colIndex++){
+				isRowFull = gameMap.getMapBlock(colIndex, rowIndex) != Color.BLACK;
+				System.out.println(isRowFull);
+				if(!isRowFull) {
+					break;
+				}
+			}
+			
+			
+			if(isRowFull){
+				for(int colIndex = mapOffset; colIndex < gameMap.getWidth(); colIndex++){
+					gameMap.setMapBlock(colIndex, rowIndex, Color.BLACK);
+				}
+				rowStrick++;
+				for(int rowIndex2 = gameMap.getHeight() -2; rowIndex2 > 0; rowIndex2--) {
+					for(int colIndex = mapOffset; colIndex < gameMap.getWidth(); colIndex++){
+						Color topColor = gameMap.getMapBlock(colIndex, rowIndex2-1);
+						Color bottomColor = gameMap.getMapBlock(colIndex, rowIndex2);
+
+						if(bottomColor == Color.BLACK) {
+							gameMap.setMapBlock(colIndex, rowIndex2, topColor);
+							gameMap.setMapBlock(colIndex, rowIndex2-1, Color.BLACK);
+						}
+					}
+				}
+			}
+		}
+
+		calculatePoints(rowStrick);
+	}
+
+	public void calculatePoints(int rowStrick){
+
+		switch (rowStrick) {
+			case 1:
+				score += 100;
+				break;
+			case 2:
+				score += 300;
+				break;
+			case 3:
+				score += 500;
+				break;
+			case 4:
+				score += 800;
+				break;
+		}
+	}
 	
 	@Override 
 	public void paintComponent(Graphics g)
 	{
 		clearLastShapeRender();
 		renderShapes();
-		
-		//System.out.println("Paint");
 		
 		g.fillRect(0, 0, 26*12, 26*24);
 		for (int i = 0; i < 12; i++) {

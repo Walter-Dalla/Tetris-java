@@ -6,6 +6,7 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.awt.GridLayout;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -150,42 +151,11 @@ class StripShape extends Shape {
     StripShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(3, 1)
+			new Point(-1, 0), new Point(0, 0), new Point(1, 0), new Point(2, 0)
 		};
 		setShape(shape);
     }
-
-
-	// @Override
-	// protected void rotate(Boolean isLeftRotation) {
-	// 	int xSum = 0;
-		
-	// 	for (Point point : shape) {
-	// 		xSum += point.x;
-	// 	}
-
-	// 	Boolean isXStrip = xSum == 0 || xSum == 4;
-
-	// 	for (Point point : shape) {
-	// 		invertPoint(point);
-
-	// 		if(isXStrip){
-	// 			if(!isLeftRotation){
-	// 				point.y = 0;
-	// 			}
-	// 		}
-	// 		else {
-	// 			if(isLeftRotation){
-	// 				point.x = 1;
-	// 			}
-	// 		}
-	// 	}
-
-	// 	posRotate(isLeftRotation);
-	// }
-
 }
-
 
 class JShape extends Shape {
 
@@ -204,7 +174,7 @@ class LShape extends Shape {
     LShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 2)
+			new Point(-1, 0), new Point(0, 0), new Point(1, 0), new Point(1, 1)
 		};
 		setShape(shape);
     }
@@ -215,7 +185,7 @@ class OShape extends Shape {
     OShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)
+			new Point(-1, -1), new Point(-1, 0), new Point(0, -1), new Point(0, 0)
 		};
 		setShape(shape);
     }
@@ -226,7 +196,7 @@ class SShape extends Shape {
     SShape() {
 		super();
 		Point[] shape = {
-			new Point(1, 0), new Point(2, 0), new Point(0, 1), new Point(1, 1)
+			new Point(0, -1), new Point(1, -1), new Point(-1, 0), new Point(0, 0)
 		};
 		setShape(shape);
     }
@@ -237,7 +207,7 @@ class TShape extends Shape {
     TShape() {
 		super();
 		Point[] shape = {
-			new Point(1, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1)
+			new Point(0, -1), new Point(-1, 0), new Point(0, 0), new Point(1, 0)
 		};
 		setShape(shape);
     }
@@ -248,7 +218,7 @@ class ZShape extends Shape {
     ZShape() {
 		super();
 		Point[] shape = {
-			new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)
+			new Point(-1, -1), new Point(0, -1), new Point(0, 0), new Point(-1, 0)
 		};
 		setShape(shape);
     }
@@ -276,7 +246,7 @@ class GameMap {
 
 			for (int lineIndex = 0; lineIndex < gameMapLine.length -0; lineIndex++) {
         
-				gameMapLine[lineIndex] = Color.BLACK;
+				gameMapLine[lineIndex] = getMapBackgroundColor();
 			}
 		}
 	}
@@ -292,6 +262,47 @@ class GameMap {
 		}
 	}
 
+	public void clearRow(int rowIndex){
+		int mapOffset = 1;
+
+		for(int colIndex = mapOffset; colIndex < getWidth(); colIndex++){
+			setMapBlock(colIndex, rowIndex, getMapBackgroundColor());
+		}
+	}
+
+	public Boolean checkIfRowIsFull(int rowIndex){
+		Boolean isRowFull = false;
+
+		for(int colIndex = 0; colIndex < getWidth(); colIndex++){
+			isRowFull = getMapBlock(colIndex, rowIndex) != getMapBackgroundColor();
+	
+			if(isRowFull == false) {
+				break;
+			}
+		}
+
+		return isRowFull;
+	}
+
+	public int getMapOffSet(){
+		return 1;
+	}
+
+	public void applyGravity(int rowIndex){
+		for(int rowIndex2 = rowIndex; rowIndex2 > 0; rowIndex2--) {
+			for(int colIndex = getMapOffSet(); colIndex < getWidth(); colIndex++){
+				Color topColor = getMapBlock(colIndex, rowIndex2-1);
+				Color bottomColor = getMapBlock(colIndex, rowIndex2);
+
+				if(bottomColor == getMapBackgroundColor()) {
+					setMapBlock(colIndex, rowIndex2, topColor);
+					setMapBlock(colIndex, rowIndex2-1, getMapBackgroundColor());
+				}
+			}
+		}
+	}
+
+
 	public Color[][] getMap(){
 		return map;
 	}
@@ -305,7 +316,7 @@ class GameMap {
 	}
 
 	public void clearMapBlock(int colIndex, int lineIndex){
-		map[colIndex][lineIndex] = Color.black;
+		map[colIndex][lineIndex] = getMapBackgroundColor();
 	}
 
 	public int getHeight(){
@@ -314,6 +325,10 @@ class GameMap {
 
 	public int getWidth(){
 		return width - 1;
+	}
+
+	public Color getMapBackgroundColor(){
+		return Color.BLACK;
 	}
 }
 
@@ -335,44 +350,44 @@ public class Tetris extends JPanel {
 
 	public void newFallingShape(){
 		
-		int randomNumber = rand.nextInt();
+		int randomNumber = rand.nextInt(6);
 		Shape newShape;
 		centerPoint = new Point(5, 2);
-
+		System.out.println(randomNumber);
 		switch (randomNumber) {
 			case 0:
 				newShape = new StripShape();
 				break;
 
 			case 1:
-				newShape = new ZShape();
+				newShape = new JShape();
 				break;
 
 			case 2:
-				newShape = new TShape();
+				newShape = new LShape();
 				break;
 
 			case 3:
-				newShape = new SShape();
+				newShape = new OShape();
 				break;
 				
 			case 4:
-				newShape = new OShape();
+				newShape = new SShape();
 				break;
 
 			case 5:
-				newShape = new LShape();
+				newShape = new TShape();
 				break;
 
 			case 6:
-				newShape = new LShape();
+				newShape = new ZShape();
 				break;
 			default:
 				newShape = new LShape();
 		}
 
 		
-		fallingShape = new JShape();//newShape;
+		fallingShape = newShape;
 
 		if(willCollide(0, 1)) {
 			System.out.printf("Finish him");
@@ -416,7 +431,7 @@ public class Tetris extends JPanel {
 
 			Color gameColor = gameMap.getMapBlock(x, y);
 
-			Boolean collide = gameColor != Color.BLACK;
+			Boolean collide = gameColor != gameMap.getMapBackgroundColor();
 
 			if(collide) {
 				return true;
@@ -441,27 +456,25 @@ public class Tetris extends JPanel {
 			int newX = point.x + centerPoint.x;
 			int newY = point.y + centerPoint.y;
 	
-			gameMap.setMapBlock(newX, newY, Color.black);
+			gameMap.setMapBlock(newX, newY, gameMap.getMapBackgroundColor());
 		}
 	}
 
 	public void renderShapes(){
-
 		for (Point point : fallingShape.getShape()) {
 			int newX = point.x + centerPoint.x;
 			int newY = point.y + centerPoint.y;
 
 			gameMap.setMapBlock(newX, newY, fallingShape.color);
-			
 		}
 	}
 
 	public void rotate(Boolean isLeftRotation) {
 		clearLastShapeRender();
-		Point[] points = fallingShape.getShape();
-		points = fallingShape.preRotate(points, isLeftRotation);
 		
-		if(!willCollide(points)) {
+		Point[] newPosition = fallingShape.preRotate(fallingShape.getShape(), isLeftRotation);
+		
+		if(!willCollide(newPosition)) {
 			fallingShape.rotate(isLeftRotation);
 		}
 	}
@@ -471,32 +484,13 @@ public class Tetris extends JPanel {
 		int mapOffset = 1;
 
 		for(int rowIndex = mapOffset; rowIndex < gameMap.getHeight() -mapOffset; rowIndex++) {
-			Boolean isRowFull = true;
-			for(int colIndex = 0; colIndex < gameMap.getWidth(); colIndex++){
-				isRowFull = gameMap.getMapBlock(colIndex, rowIndex) != Color.BLACK;
-				System.out.println(isRowFull);
-				if(!isRowFull) {
-					break;
-				}
-			}
+			Boolean isRowFull = gameMap.checkIfRowIsFull(rowIndex);
 			
 			
 			if(isRowFull){
-				for(int colIndex = mapOffset; colIndex < gameMap.getWidth(); colIndex++){
-					gameMap.setMapBlock(colIndex, rowIndex, Color.BLACK);
-				}
 				rowStrick++;
-				for(int rowIndex2 = gameMap.getHeight() -2; rowIndex2 > 0; rowIndex2--) {
-					for(int colIndex = mapOffset; colIndex < gameMap.getWidth(); colIndex++){
-						Color topColor = gameMap.getMapBlock(colIndex, rowIndex2-1);
-						Color bottomColor = gameMap.getMapBlock(colIndex, rowIndex2);
-
-						if(bottomColor == Color.BLACK) {
-							gameMap.setMapBlock(colIndex, rowIndex2, topColor);
-							gameMap.setMapBlock(colIndex, rowIndex2-1, Color.BLACK);
-						}
-					}
-				}
+				gameMap.clearRow(rowIndex);
+				gameMap.applyGravity(rowIndex);
 			}
 		}
 
@@ -540,14 +534,22 @@ public class Tetris extends JPanel {
 		g.drawString("" + score, 19*12, 25);
 		
 	}
-
+	
 	public static void main(String[] args) {
 		JFrame f = new JFrame("Tetris");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setSize(12*26+20, 26*24+100);
-		final Tetris game = new Tetris();
+		f.setSize(900, 900);
 		
+		
+		final Tetris game = new Tetris();
+		final Tetris game2 = new Tetris();
+
+		GridLayout gridLayout = new GridLayout(0, 2);
+        f.setLayout(gridLayout);
+        gridLayout.layoutContainer(f);
+
 		f.add(game);
+		f.add(game2);
 		f.setVisible(true);
 		
 		f.addKeyListener(new KeyListener() {
@@ -589,9 +591,10 @@ public class Tetris extends JPanel {
 				while (true) {
 					
 					try {
-						Thread.sleep(1000);
-						game.repaint();
+						Thread.sleep(600);
+
 						game.fallBlock();
+						game.repaint();
 					} catch ( InterruptedException e ) {
 						System.out.println(e.getMessage());
 					}

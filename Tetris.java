@@ -353,7 +353,7 @@ public class Tetris extends JPanel {
 		int randomNumber = rand.nextInt(6);
 		Shape newShape;
 		centerPoint = new Point(5, 2);
-		System.out.println(randomNumber);
+		
 		switch (randomNumber) {
 			case 0:
 				newShape = new StripShape();
@@ -594,6 +594,8 @@ public class Tetris extends JPanel {
 						Thread.sleep(600);
 
 						game.fallBlock();
+						game2.fallBlock();
+						game2.repaint();
 						game.repaint();
 					} catch ( InterruptedException e ) {
 						System.out.println(e.getMessage());
